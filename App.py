@@ -14,13 +14,14 @@ bone = CollectableObject("bone", "A grisly looking bone with teeth marks scoring
 # read your map--------------------------------------------------------------------------
 areaMap = ReadMap("Resources/Map.txt")
 
-
-
 # ---------------------------------------------------------------------------------------------------------------------
 # GAMEPLAY-------------------------------------------------------------------------------------------------------------
+player.inventory.append(bone)
+
+
+player.Move(areaMap, 180)
 
 player.Move(areaMap, 0)
-player.Move(areaMap, 90)
+
 player.Move(areaMap, 0)
-player.Move(areaMap, 180)
-player.Move(areaMap, 270)
+print(bone.GetCurrentPosition(areaMap))
