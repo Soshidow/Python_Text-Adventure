@@ -41,11 +41,6 @@ class MoveableObject(Object):
         currentPosition = self.GetCurrentPosition(areaMap)
         targetPosition = self.GetTargetPosition(areaMap, angleFromNorth)
 
-        # DEBUGGING START
-        print(f"{self.name} is attempting to move")
-        print(f"Current {self.name} Position: {currentPosition}\tTarget {self.name} Position: {targetPosition}\n")
-        # DEBUGGING END
-
         if targetPosition in areaMap: # check if targetPosition exists
             for object in areaMap[targetPosition]:
                 if hasattr(object, 'isObstruction') and object.isObstruction:
@@ -88,5 +83,27 @@ class PlayerCharacter(MoveableObject): # Unique MoveableObject for the player.
 
 class CollectableObject(MoveableObject): # MoveableObjects that can be collected by the player (and move with them)
 
-    def PickUp(self):
-        pass
+    def PickUp(self, areaMap):
+        currentPosition = MoveableObject.GetCurrentPosition(self, areaMap)
+        for object in areaMap[currentPosition]:
+            if object.name == 'player':
+                if self in object.inventory:
+                    print(f"You are already holding the {self.name}.")
+                    return False
+                else:
+                    object.inventory.append(self)
+                    return True
+        print(f"You need to move closer to the {self.name} to pick it up.")
+        return False
+
+    def Drop(self, areaMap):
+        currentPosition = MoveableObject.GetCurrentPosition(self, areaMap)
+        for object in areaMap[currentPosition]:
+            if object.name == 'player':
+                if self in object.inventory:
+                    object.inventory.remove(self)
+                    print(f"You dropped the {self.name}.")
+                    return True
+
+        print(f"You are not holding the {self.name}.")
+        return False
