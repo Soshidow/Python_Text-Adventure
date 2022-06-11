@@ -5,9 +5,13 @@ from Functions import *
 
 # SETUP----------------------------------------------------------------------------------------------------------------
 # create your objects--------------------------------------------------------------------
-player = PlayerCharacter("player", "This is yourself.")
+player = PlayerCharacter()
 
 wall = BoundaryObject("wall", "A wall.")
+
+door = BoundaryObject("door", "A door.")
+
+key = KeyObject("key", "A key.", door)
 
 bone = CollectableObject("bone", "A grisly looking bone with teeth marks scoring the surface.")
 
@@ -16,18 +20,12 @@ areaMap = ReadMap("Resources/Map.txt")
 
 # ---------------------------------------------------------------------------------------------------------------------
 # GAMEPLAY-------------------------------------------------------------------------------------------------------------
-print(f"Player: {player.GetCurrentPosition(areaMap)}   Bone: {bone.GetCurrentPosition(areaMap)}   Player Inventory: {player.inventory}")
-print(bone.PickUp(areaMap))
-print(bone.Drop(areaMap))
-player.Move(areaMap,0)
-player.Move(areaMap,90)
-print(f"Player: {player.GetCurrentPosition(areaMap)}   Bone: {bone.GetCurrentPosition(areaMap)}   Player Inventory: {player.inventory}")
-print(bone.Drop(areaMap))
-print(bone.PickUp(areaMap))
-print(f"Player: {player.GetCurrentPosition(areaMap)}   Bone: {bone.GetCurrentPosition(areaMap)}   Player Inventory: {player.inventory}")
-print(bone.PickUp(areaMap))
 player.Move(areaMap,180)
-print(f"Player: {player.GetCurrentPosition(areaMap)}   Bone: {bone.GetCurrentPosition(areaMap)}   Player Inventory: {player.inventory}")
-print(bone.Drop(areaMap))
+player.Move(areaMap,90)
+key.PickUp(areaMap)
+player.Move(areaMap,180)
+print(f"Player: {player.GetCurrentPosition(areaMap)}   Door: {door.GetCurrentPosition(areaMap)}   Player Inventory: {player.inventory}")
+player.Move(areaMap, 90)
+key.Unlock(areaMap, "door")
 player.Move(areaMap,0)
-print(f"Player: {player.GetCurrentPosition(areaMap)}   Bone: {bone.GetCurrentPosition(areaMap)}   Player Inventory: {player.inventory}")
+print(f"Player: {player.GetCurrentPosition(areaMap)}   Door: {door.GetCurrentPosition(areaMap)}   Player Inventory: {player.inventory}")

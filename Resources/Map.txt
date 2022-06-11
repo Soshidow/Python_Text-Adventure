@@ -1,5 +1,5 @@
 wall	wall	wall	wall	wall
 wall			bone	wall
 wall		player		wall
-wall				wall
-wall	wall	wall	wall	wall
+wall	key			wall
+wall	wall	door	wall	wall

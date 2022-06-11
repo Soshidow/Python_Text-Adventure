@@ -6,21 +6,17 @@ class Object:
         objectsDict[self.name] = self
         self.description = description
 
-class ImmoveableObject(Object):
-    pass
-
-class BoundaryObject(ImmoveableObject):
-    def __init__(self, name, description):
-        Object.__init__(self, name, description)
-        self.isObstruction = True
-
-
-class MoveableObject(Object):
-
     def GetCurrentPosition(self, areaMap):
         for coordinate in areaMap:
             if self in areaMap[coordinate]:
                 return coordinate
+
+class BoundaryObject(Object):
+    def __init__(self, name, description):
+        super().__init__(name, description)
+        self.isObstruction = True
+
+class MoveableObject(Object):
 
     def GetTargetPosition(self, areaMap, angleFromNorth):
         currentPosition = self.GetCurrentPosition(areaMap)
@@ -44,7 +40,7 @@ class MoveableObject(Object):
         if targetPosition in areaMap: # check if targetPosition exists
             for object in areaMap[targetPosition]:
                 if hasattr(object, 'isObstruction') and object.isObstruction:
-                    if self.name == "player":
+                    if self.name == 'player':
                         print(f"A {object.name} blocks your path.\n")
                     else:
                         print(f"The {self.name} is blocked by a {object.name}")
@@ -59,8 +55,8 @@ class MoveableObject(Object):
 
 
 class PlayerCharacter(MoveableObject): # Unique MoveableObject for the player.
-    def __init__(self, name, description, orientation = 0,):
-        Object.__init__(self, name, description)
+    def __init__(self, orientation = 0,):
+        super().__init__('player', "")
         self.orientation = orientation
         self.inventory = []
 
@@ -92,6 +88,7 @@ class CollectableObject(MoveableObject): # MoveableObjects that can be collected
                     return False
                 else:
                     object.inventory.append(self)
+                    print(f"You pick up the {self.name}.")
                     return True
         print(f"You need to move closer to the {self.name} to pick it up.")
         return False
@@ -107,3 +104,25 @@ class CollectableObject(MoveableObject): # MoveableObjects that can be collected
 
         print(f"You are not holding the {self.name}.")
         return False
+
+class KeyObject(CollectableObject):
+    def __init__(self, name, description, correspondingLock):
+        super().__init__(name, description)
+        self.correspondingLock = correspondingLock.name
+
+    def Unlock(self, areaMap, lockedObject):
+        playerPosition = objectsDict['player'].GetCurrentPosition(areaMap)
+        keyPosition = self.GetCurrentPosition(areaMap)
+
+        if playerPosition == keyPosition:
+            lockPosition = objectsDict[lockedObject].GetCurrentPosition(areaMap)
+            if abs(abs(lockPosition[0] - keyPosition[0]) + abs(lockPosition[1] - keyPosition[1])) <= 1:
+                if lockedObject == self.correspondingLock:
+                    objectsDict[lockedObject].isObstruction = False
+                    print(f"You unlock the {lockedObject}")
+                else:
+                    print(f"The {self.name} doesn't work for this {lockedObject}.")
+            else:
+                print(f"You need to move closer to the {lockedObject} to try it.")
+        else:
+            print(f"You need to move closer to the {self.name} to use it.")

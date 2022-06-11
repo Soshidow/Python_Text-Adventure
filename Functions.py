@@ -1,6 +1,6 @@
 from Classes import objectsDict
 
-def ReadMap(fileLocation): # creates a dictionary with co-ordinates as keys and references to the objects stored there as values.
+def ReadMap(fileLocation): # creates a dictionary with co-ordinates as keys and references to the objects as values.
     try: mapFile = open(fileLocation) # check the file path first
     except:
         print("map file not found")
