@@ -1,15 +1,32 @@
-objectsDict = {}
+from Functions import ReadMap
+
+referenceMap = ReadMap("Resources/Map.txt") # dictionary of coordinate-reference pairs
+objectsDict = {} # dictionary of name-reference pairs
 
 class Object:
     def __init__(self, name, description):
         self.name = name
-        objectsDict[self.name] = self
         self.description = description
+        objectsDict[self.name] = self
 
-    def GetCurrentPosition(self, areaMap):
-        for coordinate in areaMap:
-            if self in areaMap[coordinate]:
+        objectFound = False
+        for coordinate in referenceMap:
+            if self.name in referenceMap[coordinate]:
+                objectFound = True
+                referenceMap[coordinate].append(self)
+                referenceMap[coordinate].remove(self.name)
+        if not objectFound:
+            print(f"'{self.name}' was not found on the map.")
+
+    def GetCurrentPosition(self):
+        for coordinate in referenceMap:
+            if self in referenceMap[coordinate]:
                 return coordinate
+
+    def GetObjectDistance(self, firstCoordinate, secondCoordinate):
+        distance = abs(firstCoordinate[0] - secondCoordinate[0]) + abs(firstCoordinate[1] - secondCoordinate[1])
+        return distance
+
 
 class BoundaryObject(Object):
     def __init__(self, name, description):
@@ -18,8 +35,8 @@ class BoundaryObject(Object):
 
 class MoveableObject(Object):
 
-    def GetTargetPosition(self, areaMap, angleFromNorth):
-        currentPosition = self.GetCurrentPosition(areaMap)
+    def GetTargetPosition(self, angleFromNorth):
+        currentPosition = self.GetCurrentPosition()
 
         match angleFromNorth: # In degrees purely for readability.
             case 0:
@@ -33,26 +50,25 @@ class MoveableObject(Object):
 
         return targetPosition
 
-    def Move(self, areaMap, angleFromNorth):
-        currentPosition = self.GetCurrentPosition(areaMap)
-        targetPosition = self.GetTargetPosition(areaMap, angleFromNorth)
+    def Move(self, angleFromNorth):
+        currentPosition = self.GetCurrentPosition()
+        targetPosition = self.GetTargetPosition(angleFromNorth)
 
-        if targetPosition in areaMap: # check if targetPosition exists
-            for object in areaMap[targetPosition]:
+        if targetPosition in referenceMap: # check if targetPosition exists
+
+            for object in referenceMap[targetPosition]:
                 if hasattr(object, 'isObstruction') and object.isObstruction:
                     if self.name == 'player':
                         print(f"A {object.name} blocks your path.\n")
                     else:
                         print(f"The {self.name} is blocked by a {object.name}")
-                    return False # obstructions block movement, return False
+                    return False # obstruction blocks movement, return False
 
-            areaMap[targetPosition].append(self)
+            referenceMap[targetPosition].append(self)
         else:
-            areaMap[targetPosition] = [self]
-        areaMap[currentPosition].remove(self)
-        return True # if no obstructions, move into targetPosition and out of currentPosition
-
-
+            referenceMap[targetPosition] = [self]
+        referenceMap[currentPosition].remove(self)
+        return True # no obstruction, append to or create targetPosition and remove self from currentPosition
 
 class PlayerCharacter(MoveableObject): # Unique MoveableObject for the player.
     def __init__(self, orientation = 0,):
@@ -63,60 +79,54 @@ class PlayerCharacter(MoveableObject): # Unique MoveableObject for the player.
     def __Turn(self, angleToTurn):
         return (angleToTurn + self.orientation)%360
 
-    def Look(self, areaMap, angleToTurn):
-        target = MoveableObject.GetTargetPosition(areaMap, self.__Turn(angleToTurn))
+    def Look(self, angleToTurn):
+        target = self.GetTargetPosition(self.__Turn(angleToTurn))
         return target
 
-# potentially swap these methods round a bit, it would be nice to be able to Look without Turning, but Turn can involve looking
-# this may add complications to move though need to think.
-
-
-    def Move(self, areaMap, angleToTurn):
+    def Move(self, angleToTurn):
         self.orientation = self.__Turn(angleToTurn)
-        if MoveableObject.Move(self, areaMap, self.orientation):
+        if MoveableObject.Move(self, self.orientation):
             for item in self.inventory:
-                item.Move(areaMap, self.orientation)
+                item.Move(self.orientation)
 
 class CollectableObject(MoveableObject): # MoveableObjects that can be collected by the player (and move with them)
 
-    def PickUp(self, areaMap):
-        currentPosition = MoveableObject.GetCurrentPosition(self, areaMap)
-        for object in areaMap[currentPosition]:
-            if object.name == 'player':
-                if self in object.inventory:
-                    print(f"You are already holding the {self.name}.")
-                    return False
-                else:
-                    object.inventory.append(self)
-                    print(f"You pick up the {self.name}.")
-                    return True
-        print(f"You need to move closer to the {self.name} to pick it up.")
-        return False
+    def PickUp(self):
+        player = objectsDict['player']
+        if player.GetCurrentPosition() == self.GetCurrentPosition():
+            if self not in player.inventory:
+                player.inventory.append(self)
+                print(f"You pick up the {self.name}.")
+                return True
+            else:
+                print(f"You are already holding the {self.name}.")
+                return False
+        else:
+            print(f"You need to move closer to the {self.name} to pick it up.")
+            return False
 
-    def Drop(self, areaMap):
-        currentPosition = MoveableObject.GetCurrentPosition(self, areaMap)
-        for object in areaMap[currentPosition]:
-            if object.name == 'player':
-                if self in object.inventory:
-                    object.inventory.remove(self)
-                    print(f"You dropped the {self.name}.")
-                    return True
-
-        print(f"You are not holding the {self.name}.")
-        return False
+    def Drop(self):
+        player = objectsDict['player']
+        if self in player.inventory:
+            player.inventory.remove(self)
+            print(f"You dropped the {self.name}.")
+            return True
+        else:
+            print(f"You are not holding the {self.name}.")
+            return False
 
 class KeyObject(CollectableObject):
     def __init__(self, name, description, correspondingLock):
         super().__init__(name, description)
         self.correspondingLock = correspondingLock.name
 
-    def Unlock(self, areaMap, lockedObject):
-        playerPosition = objectsDict['player'].GetCurrentPosition(areaMap)
-        keyPosition = self.GetCurrentPosition(areaMap)
+    def Unlock(self, lockedObject):
+        player = objectsDict['player']
+        playerPosition = player.GetCurrentPosition()
 
-        if playerPosition == keyPosition:
-            lockPosition = objectsDict[lockedObject].GetCurrentPosition(areaMap)
-            if abs(abs(lockPosition[0] - keyPosition[0]) + abs(lockPosition[1] - keyPosition[1])) <= 1:
+        if self in player.inventory:
+            lockPosition = objectsDict[lockedObject].GetCurrentPosition()
+            if self.GetObjectDistance(playerPosition, lockPosition) <= 1:
                 if lockedObject == self.correspondingLock:
                     objectsDict[lockedObject].isObstruction = False
                     print(f"You unlock the {lockedObject}")
