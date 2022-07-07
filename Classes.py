@@ -1,4 +1,4 @@
-from Functions import ReadMap
+from FileInterpretation import ReadMap
 
 referenceMap = ReadMap("Resources/Map.txt") # dictionary of coordinate-reference pairs
 objectsDict = {} # dictionary of name-reference pairs

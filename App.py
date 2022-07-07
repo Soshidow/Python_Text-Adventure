@@ -1,5 +1,5 @@
 from Classes import *
-from Functions import *
+from CommandInterpretation import *
 # to-do list
     # refactor the ReadMap function so that I can use the object.name property and remove the areaMapKeys.
 
@@ -17,11 +17,5 @@ bone = CollectableObject("bone", "A grisly looking bone with teeth marks scoring
 
 # ---------------------------------------------------------------------------------------------------------------------
 # GAMEPLAY-------------------------------------------------------------------------------------------------------------
-player.Move(180)
-player.Move(90)
-key.PickUp()
-
-player.Move(180)
-player.Move(90)
-key.Unlock('door')
-player.Move(0)
+command = InputCommand()
+print(InterperateObject(command))
