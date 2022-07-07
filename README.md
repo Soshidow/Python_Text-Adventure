@@ -1,5 +1,5 @@
-# Python_Text-Adventure
- Text-based 'Choose Your Own Adventure'
+# Text-Adventure
+ Text-based 'Choose Your Own Adventure' written in Python.
 
 	Version 2:
 		+ Rewritten from the ground up to accommodate scalability
